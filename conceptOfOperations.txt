@@ -1,0 +1,393 @@
+﻿header 
+Auxiliary Telescope Concept of Operations                                                            LSE-XXX        
+
+
+
+
+
+
+
+
+Large Synoptic Survey Telescope (LSST)
+
+
+
+
+Auxiliary Telescope Concept of Operations
+
+
+P. Ingraham
+LSE-XXX
+December XX, 2017
+Version 0.8
+
+
+
+
+                                                        
+________________
+
+
+CHANGE RECORD 
+Version
+	Date
+	Description
+	Owner name
+	0.8
+	12/1/17
+	Draft for AT Software Workshop
+	P. Ingraham
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	________________
+
+
+1. Table of Contents
+Scope of this Document        4
+Introduction        4
+Early Deployment Plan        7
+Top Level Requirements        7
+System Hardware Components        8
+Building and Dome        8
+Telescope        9
+Spectrograph        11
+ATS Instrument        12
+ATS Sensor and Readout System        13
+Calibration Equipment        13
+Auxiliary Telescope Control Software Systems        14
+OCS        15
+ATCS        15
+ACCS and ADAQ        16
+Auxiliary Telescope Camera Diagnostic “Cluster”        17
+Networking        17
+Data Flow and Access Points        18
+Data Products        21
+Documents Referenced        21
+
+
+________________
+
+
+1. Scope of this Document
+This document is to serve as a top level description of Auxiliary Telescope System and provide a high-level view of its operation. It acts as a reference document to lower level requirement documents and identifies the interfaces in the system. Through the use of use-cases and an architectural overview, it also helps to define each subsystem’s role (T&S, DM, Camera) in the observatory operation, data transport and handling as well as the production of data products.
+1. Introduction
+The LSST is a large, ground-based telescope currently under construction that will survey the entire visible sky every three nights. A smaller Auxiliary Telescope (AT) will be located on a small knoll adjacent to LSST, as shown in Figure 1, and will be used to perform spectroscopy of known standard stars to measure the atmospheric absorption profile during LSST observations. The atmospheric absorption component is a primary contributor to photometric error and detailed knowledge of its temporal and spatial structure function is required to both properly quantify its error contribution, and to apply the best possible correction. 
+  
+
+Figure 1: The new 30 ft Ash Dome being installed on the building for the Auxiliary Telescope, located on, “Calibration Hill.” The main summit facility building for LSST is shown in the background, approximately ~150 meters behind. 
+The atmospheric transmission is dominated by 5 components, shown in Figure 1, that are largely independent of one another. Although directly measurable from a spectrum, the oxygen component (purple line) is deterministic from the atmospheric pressure and the ozone component (orange line) can be determined from satellite measurements. Rayleigh scattering (green line) is a well understood phenomenon that dominates the spectral shape at short wavelengths. The atmospheric aerosols (yellow line), which are micron-size particles such as sea salt, smoke and dust, inflict a spectral absorption profile which changes form depending upon the composition of the scattering particles. The spectral shape is particularly difficult to determine and requires a large spectral range to properly characterize. Both the composition and size distribution of the aerosol components are known to change with wind direction, turbulence, local metrology etc, and therefore provide a time-variable (and most likely spatially variable) impact on the spectrum. The amount of water (blue line) along the line of sight impacts several areas of the spectrum, the most prominent being centered around ~970nm.[1] 
+  
+
+Figure 2: The atmospheric transmission spectrum of the atmosphere. The water feature defines the spectral resolution requirement needed to properly characterize the effect on broadband photometry. The aerosol components and changing profile shape necessitates a large wavelength range, which is a particularly challenging requirement to meet and has many design implications.
+The Auxiliary Telescope system is designed to observe nearly in-step with LSST. Although other observing strategies are possible (e.g. observing over large changes in airmass at lower cadence), it is expected that the AT will be used in the same area of observation as LSST. The target selection and sequence will be performed by the AT Scheduler, which is being designed to use both previous and predicted near-future observations of LSST to select the target.
+To measure the atmospheric transmission, a slitless spectrograph will be mounted on one of the two telescope instrument ports. The targets are expected to be bright, early type, non-variable stars. The variation in their spectra with airmass and time provide the information necessary to extract the atmospheric transmission function. Standard stars will be used where possible but are not always available due to their limited sky coverage. Exposure times for the instrument’s nominal use-case (see section 10.1) are expected to vary between 2 and 30 seconds depending upon the instrument setup, stellar magnitude, and level of grey extinction (clouds). Details of this use-case and the instrument setup are found in the sections below.
+1. Early Deployment Plan
+The Auxiliary Telescope system is being deployed to the summit well before the start of main telescope commissioning. There are multiple reasons for doing this: The spatial and temporal structure function of the aerosols and water vapour is not well designed on time scales of ~30 seconds so we are aiming to perform ~1-year of observations measuring this prior  to being required to support ComCam operations. The hardware/software systems used in the AT system mimic strongly those of LSST. The AT acts as an early testbed to start using this software early, which will result in higher levels of readiness come commissioning. Early stages of AT operation and commissioning will have significant amount of human intervention and guidance, with the goal of becoming robotic in operation for both safety and efficiency reasons. The more time spent soak-testing the system, the higher fidelity robotisation. Because this telescope is using LSST hardware and software systems, whose schedules are primarily driven by the development of the 8.4m, the AT schedule is based on availability dates as opposed to need dates, and therefore the deployment schedule is subject to much higher volatility.
+1. Top Level Requirements
+The top-level requirements on the calibration of the atmospheric transmission are found in LSE-30, where the error budget due to the atmosphere is detailed as a function of filter (OSS-REQ-0276). The requirements also state that the mapping of the transmission function shall be measurable over the entire nightly operating area, with a maximum of 5 minutes between measurements. A challenging requirement for the system is the broad wavelength coverage (350 to 1125 nm), which makes the use of an LSST sensor an optimal choice should a single sensor be used to observe the entire range. 
+These top level requirements flow down into the subsystem requirement documents, then continue to flow into the requirement documents for the individual pieces of hardware. LSE-60 contains the T&S related requirements on the deliverables, notably in section 3.2. The deliverables, their functionality, and requirements are further described in Sections 5 and 6 of this document.  The top-level Data Management requirements document is LSE-61, however the document that best describes the data products and Auxiliary Telescope related activities is found in LDM-151. The LSST Camera team does not have any deliverables to the AT system. However, they are involved through the auspices of T&S, who has contracted SLAC to deliver a scaled down version of the Camera Control System and Data Acquisition System to control and readout the spectrograph sensor. This is further described in section X. 
+1. System Hardware Components
+The hardware to support the Auxiliary Telescope is to be mainly located inside the Auxiliary Telescope Building. Many of the computing and networking components are located in the main summit facility in order to minimize heating of the AT Dome that would result in seeing degradation. This section outlines each of the primary components, and directs the reader to the associated documentation for each component.
+   1. Building and Dome
+
+
+The Auxiliary Telescope Building is cylindrical with a 30-foot (9.14 meter) diameter. It has two floors, with the second, “observing” floor being fully grated to promote air circulation. Additionally, there are 4 vent gates on the lower floor, two of which will be suited with fans. The AT building has it’s own uninterrupted power supply with all critical systems being connected. The exception to this is the dome due to lighting protection reasons. The basement contains all electrical cabinets to operate the telescope, dome, spectrograph, and general support electronics, as well as an air compressor for the telescope pneumatics. The dome itself is a 30-foot diameter Ash Dome with upper and lower shutters. All motors have been upgraded to use 3-phase power. The number of azimuth drive motors has been increased from two single speed motors, to four variable frequency drives, to increase rotation speeds as well as longevity and robustness of the system. A static flat field screen is mounted on the dome opposite the shutter. A screenshot of the building’s solid model is found in Figure 3.
+  
+
+Figure 3: The Auxiliary Telescope Building located on Calibration Hill.  The observing floor is made of a grating to promote air flow. A flat field screen is mounted on the dome and uses the same coating as the main telescope calibration screen.
+
+
+   1. Telescope
+The Auxiliary Telescope, previously known as the Calypso telescope, was privately developed in the late 90’s and continued to operate on Kitt Peak until 2014 (Figure 2). The 1.2-meter diameter, F/18 telescope was then removed from Kitt Peak and transferred to the NOAO High Bay in Tucson Arizona where it is currently undergoing a refurbishment and retrofitting effort to make the telescope appropriate for robotic operation in coordination with LSST observations. The telescope is composed of three mirrors: a 1.2 m parabolic primary, a hyperbolic secondary, and a flat tertiary that folds the beam at 90 degrees and directs it into one of the two instrument ports. The rotation of the instruments to counteract field rotation is performed by motors located inside the telescope fork arm.
+
+
+
+
+
+
+  
+
+Figure 3: The Calypso telescope with its two instruments before it was removed from Kitt Peak. 
+
+
+The details of the telescope refurbishment effort, being performed by ACE manufacturing, is contained in LTS-336 (Statement of Work) and LTS-337 (specifications). The refurbishment effort focuses on the replacement of all electronics and control systems, leaving the mechanical aspects largely unchanged, and the optics untouched. Like the main telescope, the control system is based around National Instruments Compact RIO (cRIO) controllers. The telescope motion is performed by Kollmorgan motors using Copley drives. The mount control system is being developed by the control software group at CTIO. Their statement of work is LTS-660 with the ATCS to ATMCS ICD being LTS-657. The transition of the AT from an observer-operated observatory to a robotic observatory necessitates that all systems be highly robust and controllable remotely. This change in operation has necessitated numerous changes in the control system and has influenced designs to be geared towards being highly robust.
+  
+
+        Figure 4: The Auxiliary Telescope undergoing refurbishment in the NOAO High Bay.
+   1. Spectrograph 
+The imaging spectrograph being fabricated for the Auxiliary Telescope consists of two primary components: the instrument and the sensor with readout electronics. 
+
+
+  
+
+Figure 4: The Auxiliary Telescope spectrograph solid model. The Spectrograph instrument and cable drum mechanisms are being fabricated by ACE, whereas the dewar and sensor system are being fabricated by Harvard.
+ 
+      1. ATS Instrument
+Performing accurate spectrophotometry requires exceptionally clean spectra. For this reason, LSST has opted for a slitless spectrograph, where the dispersers and any required filters are located in the F/18 converging beam. This minimizes the number of optics in teh system that may contribute ghosts, whereas opting for a slitless design removes challenges associated with alignment and differential slit loss due to PSF chromaticity effects and differential atmospheric refraction. Differential slit loss is particularly challenging as the signature is moderately degenerate with absorption profile of aerosols. The described instrument setup was experimentally demonstrated to be effective using the SMARTS 0.9m telescope on Cerro Tololo, where a transmissive Ronchi ruling was inserted in the filter wheel. A slitless spectrograph also enables a reduction of optical elements resulting in increased transmission and decreased scattered light (ghosts). The optimal observing cadence and instrument setup is highly dependent upon the filter being used by LSST, and the spatial and temporal variation of the water content and aerosols, which are not well understood. For this reason, the spectrograph design incorporates components that support multiple filters and dispersers that may be moved in and out of the beam on short timescales. The current baseline uses a simple Ronchi ruling. The LSST PO will provide filters but the filter (and detector window) thicknesses must be accounted for when performing the optical design. The top level requirements are to obtain a spectrum over the entire 350-1050 nm bandpass in a single image, with a minimum resolution of 6nm at a wavelength of 900 nm, which corresponds to a large water absorption feature. The specifications and statement of work for the spectrograph instrument can be found in LTS-487 and LTS-488, respectively.
+
+
+      1. ATS Sensor and Readout System
+The detector selected for the spectrograph is a 4k by 4k LSST science detector with square pixels with a 10um pitch. The device is controlled via an LSST wavefront readout electronics board and (lightly) modified Camera Control System and Data Acquisition System. The CCD is cooled using a Polycold (cryotiger) system. The readout system uses a LSST Wavefront Readout Electronics Board (WREB),  however, unlike the main camera, the readout electronics is not inside the dewar and is kept near ambient temperature. The entire software architecture is designed to mimic the main telescope systems. This is done to minimize the number of unique systems on the summit and therefore lower operating costs, as well as providing a test platform for early integration of the numerous software components being developed by all teams (T&S, Camera, DM). 
+In order to minimize heat loads in the AT building, the main heat loads (e.g. CCS and DAQ computers) are stored in the summit facility computer room. This necessitates a special fiber bundle be run between the AT building and summit facility. One small computer to support trending and data quality analysis for the camera system remains in the AT building, at least until installation of the main camera hardware. Details of the system can be found in LTS-520 and LTS-521. 
+   1. Calibration Equipment
+Numerous pieces of calibration equipment reside in the Auxiliary Telescope Dome. A flat-field screen is mounted on the upper section of the Ash Dome, opposite the shutter. The screen is coated with the same coatings (Avian-D from Aviant Technologies) as the main telescope calibration screen. The screen is illuminated with a Horiba Kiloarc white light source that is passed through a monochrometer. This allows the collection of narrowband flats, which are expected to use a bandpass slightly smaller than the instrument spectral resolution (~6nm). This is analogous to the main telescope which uses a tunable laser for this purpose. Also like the main telescope, a Hamamatsu S2281 NIST-traceable photodiode with a Keithley 6517b electrometer will be used to monitor the illumination variations of the screen, and a Avantes ULS2048x64TEC model fiber-fed spectrograph will measure the exitant light from the source with a 1.5nm resolution. All of these devices are controlled via the Auxiliary Telescope Control System described below.
+1. Auxiliary Telescope Control Software Systems
+The software systems used to control the auxiliary telescope are designed to replicate those of the main telescope to the maximum extent possible.  This section outlines the functionality of the principle components and identifies any key differences between the main telescope analogues. The architecture is based on hierarchical control with distributed systems, where all communication is performed over single channel, viewable by all connected devices.  With the exception of science sensor data (from the LSST camera and Auxiliary Telescope Spectrograph), all communications and device parameters, including the data recorded, are archived to the Engineering Facilities Database (discussed below) for use during data reduction, system monitoring, maintenance planning etc. A more detailed explanation of the global system architecture is found in LSE-150. This document aims to outline the functionality of the components specific to the Auxiliary telescope, and direct the reader to applicable documentation that details lower-level functionalities of each system.
+  
+
+Figure 5: The software architecture structure for the LSST System. The Auxiliary Telescope software systems are designed to be near-replicas of the main telescope systems to facilitate early functionality testing and minimize long-term software maintenance.
+The following subsections are meant to be 1 paragraph summaries of each section, details will be flushed out in a lower level document (Auxiliary Telescope Software Architecture - LTS -YYY).
+   1. OCS
+The Observatory Control System (OCS) is the master control system that schedules, commands, coordinates, and monitors both the main and auxiliary telescopes. The OCS orchestrates and controls all aspects of the observatory for all observations (science, calibration, and engineering) and all operation modes. The OCS coordinates the camera, telescope and data management subsystems for an integrated operation during the survey. The OCS supports automatic, scripted and manual operations from both local and remote locations. Although a single OCS is used to manage both telescopes, each one can be controlled individually. The requirements for the OCS design are found in LSE-62. 
+The OCS is composed of several components including: the communications middleware, sequencer, main telescope scheduler, and auxiliary telescope scheduler. Like the main telescope, all communications are performed via the Data Distribution Service (DDS) using the Service Abstraction Layer (SAL). With the exception of the images from the spectrograph, all data will be stored in the Engineering Facilities Database (EFD). The AT operational aspects are all handled via the same OCS sequencer used for the main telescope. The only component of the OCS that is unique to the AT is the AT Scheduler.
+To optimize the sky coverage and atmospheric measurements in coordination with the main telescope, an AT scheduler is being developed. This scheduler uses the same codebase as the main LSST scheduler, therefore guaranteeing the same functionalities and event handling, with customized scheduling algorithms. Like the main telescope, the scheduling algorithms are implemented using a Driver-API base. Although the AT scheduler will support multiple observing scenarios, the primary use-case uses a catalogue of pre-selected stars combined with the past and predicted future observations of the main telescope to determine the next target. More details of the AT scheduler are found in LTS-187.
+   1. ATCS
+The Auxiliary Telescope Control System (ATCS) is the analogue to the main telescope control system (TCS). The ATCS receives high-level commands from the OCS, processes these commands and applies any necessary logic, such as coordinated movement of axes to avoid collisions, as part of the ATCS application level, then distributes the lower level commands to the individual controllable entities. This includes hardware such as the telescope spectrograph instrument, calibration hardware, vent gates etc. The pointing component for the AT, which utilizes the T-point software found in nearly all telescope control systems, is an individual component that also utilizes DDS communication. 
+
+
+The top level description of how the telescope point is controlled is that the ATCS sends a desired Right Ascension and Declination to the pointing component, and this converts the request to a position, velocity, time (PVT) vector that is sent to telescope mount axes, also via DDS. The Auxiliary Telescope Mount Control System (ATMCS), then receives these positions via its CompactRIO device and commands the controllers and motors accordingly. Further information on the pointing component and the ATMCS are found in LTS-XXX and LTS-660, respectively.
+   1. ACCS and ADAQ
+The ACCS (Auxiliary Telescope Camera Control System) plays the same role for the auxiliary telescope at the full CCS plays for the main camera. Specifically the ACCS is responsible for controlling, monitoring and configuring the Bonn Shutter, power supplies and the DAQ system. The Master Control Module (MCM) is responsible for coordinating the activity of the different ACCS subsystems, and a CCS/OCS bridge is used to receive commands from OCS, and send back events and telemetry to the observatory. In addition, the ACCS will provide engineering consoles for monitoring and controlling the AT camera when it is not under control of the OCS, and will provide a configuration database for storing configuration data. Finally the ACCS will provide a framework for installing simple image diagnostics for monitoring and reporting on the quality of images obtained. 
+
+
+  
+
+Figure X: The Auxiliary Telescope Camera Control system has the same CCS architecture as the main telescope.  However, aspects of it may not be used to the same extent, such as the trending database or image diagnostics.
+
+
+Since the ACCS is a near clone of the full camera control system, CCS, the description of CCS can be found from LSE-71 is largely applicable, with the following differences:
+* No setFilter command will be supported (filter will be controlled by TCS)
+* No initGuiders command will be supported (camera does not provide guiding for aux telescope)
+* Details of configuration and telemetry will differ due to simplified shutter, cooling system, and due to the aux telescope camera only consisting of a single CCD.
+
+
+The hardware for the ACCS will consist of rack mounted computers in the main observatory computer room plus an advantech industrial embedded PC (UNO 1483G) which will live in the auxiliary telescope dome and which will be used to control the Bonn Shutter and power supplies. The control and readout of the CCD will be done via a camera WREB board, also living in the aux telescope dome but readout and controlled via a dedicated fiber connection to the ADAQ that will be located in the summit computer room.
+   1. Auxiliary Telescope Camera Diagnostic “Cluster”
+The Auxiliary Telescope system will have an equivalent of the “Diagnostic Cluster” which is being delivered with the main LSST camera. However, due to the Auxiliary Telescope only having a single sensor, the required processing power is greatly reduced and therefore it is expected the “cluster” will be a single machine. The AT diagnostic cluster will read the DAQ output and create a fits image, then pull the header from the header service (discussed below) and subsequently add information specific to diagnostics. It is expected that this machine will have a version of the LSST Stack installed via Docker and be capable of performing sufficient processing of the images to support quality analysis, calculation of pointing offsets, and a very preliminary spectral analysis. 
+
+
+1. Networking
+
+
+Servers that are not strictly required in the Auxiliary telescope will be housed in the Computer Room in the main LSST Telescope.
+There will be a 10Gigabit connection by means of  a switch from the Computer Room to the ATS rack inside the Auxiliary dome. This will carry all traffic in order to carry out all requirements for the operation of the ATS.
+There will be a Wireless Access point and at least one VOIP handset for communications.
+In addition there will be a dedicated 24 strand fiber cable for the Camera image data to the DAQ in the Computer Room.
+In order to transport the image data to the Base and NCSA a dedicated 10G channel will be provided from the Summit to the Base utilizing the LSST DWDM system. Once at the Base there will be a private channel to NCSA over the Long Haul International Network.
+All other traffic, apart from the Camera Image data will flow over the general 200Gigabit circuit that connects the Summit Core network to the Base core network. For external connectivity this general traffic will traverse the AURA circuit to Ampath in the USA where it will filter to either the Dotcom network or the research networks, Internet-2 or ESNET.
+
+
+* All devices use wired connections except the Dome shutter controllers (mounted on dome)
+* General Location of Hardware, how it’s connected/communicated with
+   * Description of Auxiliary Telescope hardware (half-rack) in the main summit facility
+   * X-fiber bundle to AT building, network uses 2 fibers, rest are spares?
+      * Also provides network to DIMM, weather tower, and all sky cameras
+* Wired/wireless connections? what do users use when located in the dome? 
+* Expectation of expected bandwidth (or requirement etc)
+* LSE-309 has information on all computers onsite (space/power/cooling etc)
+* Describe diagram pasted below
+  
+
+Figure Y: The Auxiliary Telescope network connects all devices in the system, which are located in various places including the Auxiliary Telescope dome, the summit facility, the base facility, and NCSA.
+1. Data Flow and Access Points 
+
+
+The Image Ingest and Distribution Data Management system (DM) for the AT system is composed of 5 primary components. This section describes those components, which can be seen in the message and data flow diagram in Figure Z
+
+
+The first component is the OCS Bridge; this component is a simple translation device, that speaks two messaging languages. This is used to translate commands/events/telemetry from the SAL to the DM Messaging dictionary. The DM internal messaging system is built around an AMQP-compliant message broker. Its role is to coordinate and synchronize behavior that is used by DM.
+
+
+The second component is the Data Management Control System which is enabled/disabled from the OCS. The DMCS keeps track of the state of every commandable device within the DM system. It generates acknowledgements and event messages associated with these start-up and shut-down sequences, such as announcing state info and offering a menu of configuration choices. While in operation, the telescope system will announce to DM important stages in nightly operation such as new visits, when exposure sequences begin and end, and when image data is available to be read out of the ATS Data Acquisition (DAQ) component. Not all systems might be enabled, so the DMCS forwards the appropriate messages to the Foreman component for each subsystem; such as the ATS subsystem, which is the focus of this document. The DMCS collates information about which images were handled successfully, and if necessary, which images must be re-fetched due to error. 
+
+
+The third component is the ATS Foreman (often referred to as a Commandable SAL Component (CSC) or Commandable Device) which is responsible for making certain the subsystem has the necessary resources, in the form of workers, to carry out its tasks. Every time the ATS moves to a new visit location, the ATS Foreman checks the health of its worker(s). If a worker is incapacitated, a backup worker is selected from a replacement set to continue processing images. The Foreman also directs the workers when the image data is ready to be fetched, and the assigned name of the image so that the proper data is retrieved, as well as informing the workers where the image data should be placed for archiving. This information is relayed to the Foreman by the DMCS component above.
+
+
+The Forwarder is component that is assigned to a subsystem Foreman via a startup configuration file. It is responsible for carrying out three important sub-tasks for every image ingest operation. Each of these three subtasks runs as its own process and forms a pipeline; the processes are called Fetch, Format, and Forward in this document. First, the Forwarder ‘Fetch’ process fetches the image data from the ATS DAQ, moves it to a work area then reassembles the image by converting it from time-series data into image array(s). After the image data exists as sixteen separate image arrays (one for each sensor amplifier segment), and have been named appropriately, the Fetch process informs the next stage in the Forwarder sub-task pipeline, called the ‘Format’ process. The Format process combines just-in-time header information with the image arrays and outputs FITS files. The next process in the pipeline is the ‘Forward’ process and its responsibility is to send the finished FITS files, constructed by segment, to the appropriate destination. After confirming that the files were moved correctly, the Forward process informs the Foreman with a message describing the result of the task(s). The Foreman passes the result set on to the DMCS where information is collated, reported, and made available to the Catch-Up Archiver commandable device (if desired).
+
+
+The Site Archive itself is the last individual component of the DM ATS system. This will consist of 12 terabytes of raid protected storage that is capable of storing 5 months of ATS image data, assuming two exposures per minute. During early integration, only images designated as important by a user will be promoted to be transferred to a special directory where software will routinely check for new content and transfer it to the desired archive location. In the long term, this process will be automated and archive storage as well as delivery to specific DM target groups will be done with the LSST-DM Data Backbone service.
+
+
+For the LSST system, the other CSCs or commendable devices (Foremen) in the system have behavior specific to their domain. For example, The Prompt Processing Foreman keeps track of 22 Forwarder resources plus spares, as well as keeping workers at the NCSA/Science Pipeline coordinated.  Because the ATS Foreman is only moving one sensor worth of data with one Forwarder and one backup forwarder, the ATS Foreman is a simpler component and does not run code at the same level of complexity as the others. However, outside of the Foreman components, every other component in the system is generic. A Forwarder is the same as any other Forwarder and can be called upon for any fetch/format/forward task in any system. The OCS Bridge and the DMCS component will run the ATS system plus any other commandable subsystems systems needed at the same time. The system has been built such that all of the commandable device subsystems can be run at once using only one DMCS and one OCS Bridge, and an assigned set of identical Forwarder instances.
+
+
+
+
+  
+
+Figure Z: The Auxiliary Telescope Data Management service uses the same components and architecture as the main telescope.  This enables the early test and verification of systems that will be used for the main LSST Camera.
+
+
+1. Data Products
+
+
+LSE-140 lists 
+* Header service uses EFD data to create a on-the-fly header that is appended to the image.
+RHL I think it's the butler's job to rendevous the EFD data with the data; this may be semantics, but
+RHL DM doesn't talk about the header service at all.  I need to clarify this.
+* Objects in this header for the AT  are captured as part of LSE-140
+RHL I don't have LSE-140 on my laptop so I cannot check.  However, in general we do not need much
+RHL information from the header (obviously we need the state of the hardware, e.g. monochrometer wavelength
+
+LDM-151 Chapter 4 defines the production of calibration products (CPP); 4.2 describes the input data and
+4.3 the output calibration products for the lsstCam.  Section 4.5 outlines the differences between lsstCam
+and the auxiliary telescope spectrograph.
+
+Calibrating the auxiliary telescope spectrograph is not identical to calibrating the lsstCam on the 8.4m.
+Nevertheless the calibration data products are similar:
+* Input calibration data:
+  * 4.2.1 Bias Frames
+  * 4.2.3 Linearity
+  * 4.2.4 Darks
+  * 4.2.5 Crosstalk coefficients
+  * 4.2.6 Defect Map
+  * 4.2.7 Saturation levels
+  * 4.2.8 Broadband Flats
+  * 4.2.9 Monochromatic Flats
+  * 4.2.12 Atmospheric Characterization
+Note that the auxiliary telescope does not need accurate gain values, fringe frames, CBP data, or
+filter scans.
+
+As discussed in 4.5, in the absence of the CBP we will use dithered star fields to correct the flats for
+scattered light and non-uniform illumination.  This is expected to be sufficient given the lack of
+strongly chromatic elements (such as filter edges) in the spectrograph.
+
+* Calibration Products
+  * 4.3.1 Master Bias
+  * 4.3.2 Master Darks
+  * 4.3.3 Master Linearity
+  * 4.3.6 Master Defects
+  * 4.3.7 Saturation Levels
+  * 4.3.8 Crosstalk
+  * 4.3.9 Master Broadband Flats
+  * 4.3.11 Master Monochromatic Flats
+  * 4.3.15 Brighter-Fatter Coefficients
+  * 4.3.16 CTE Measurement
+  * 4.3.17 Filter Transmission
+  * 4.3.19 Spectral Standards
+
+In the context of the auxiliary telescope spectrograph "Filter Transmission" (4.3.17) refers to the possible
+use of notch filters to define the wavelength solutions for standard stars.
+
+The process of reducing auxiliary telescope spectroscopic data is outlined in 4.6.1, and makes use of
+these calibration products.  This results in a wavelength and flux calibrated spectrum of the target star.
+
+RHL Who wrote this? Where did the Voigt profile come from?  Actually, where did a lot of this come from?
+RHL Read VERY carefully!
+
+Once we have our extracted spectrum we use it, in conjunction with the above-the-atmospheric spectrum
+available from Gaia's BP/RP photometry and stellar atmosphere fits, we will be able to constrain an
+atmospheric model based on modtran augmented by an explicit treatment of the aerosols. This
+results in 6 parameters describing the atmosphere for each pointing:
+  * $H_2 O$ (1)
+  * $O_2$ + $N_2$ (1)
+  * $O_3$ (1)
+  * Rayleigh (1)
+  * Aerosol (2)
+Some of these parameters (Rayleigh, $O_3$, and $O_2$ + $N_2$) are strongly constrained by satellite and
+weather data, and we will use these data to set the priors when fitting the atmosphere. The baseline is to fit
+each line of sight independently, but the extent to which we will use sets of observations to fit a
+spatio-temporal model is unknown in the absence of extensive on-sky data.
+
+Additionally, there
+is no need to fit all parameters for all observing modes (e.g. when the 8.4m is observing in the
+y-band we do not need to constrain the ozone).
+
+RHL modtran or libradtran? I'd prefer the latter solely because it has an easier license
+
+1. Documents Referenced
+
+* Auxiliary Telescope and Dome Refurbishment Contract Documents
+   * LTS-336 (SOW) and LTS-337 (Specifications)
+* Data Management Science Pipelines Design LDM-151
+
+RHL I removed the references to e.g. Stubbs et al.  as they are supposed to follow from other documents
+RHL (e.g. child-of-LDM-151) rather than directly belonging here.

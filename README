@@ -1,0 +1,15 @@
+You'll have to add
+       AUXTEL_DIR/python
+(where AUXTEL_DIR is the directory containing this file) to your $PYTHONPATH environment variable.
+
+The easiest way to do this is to use eups and say
+       setup -r AUXTEL_DIR
+
+You will need a version of python3, and have numpy installed, then
+       cd AUXTEL_DIR/examples
+start a jupyter notebook, and run
+      AuxTel.ipynb
+
+
+You will see that I have totally faked SAL, and while I'm sure that I haven't got it write in detail I hope
+that the spirit is correct.
