@@ -68,6 +68,18 @@ class SAL_camera():
 
         return Command.COMPLETE
     
+    async def awaitForCompletion_setFilter(self, cmdId, timeout=0):
+        if not cmdId in self._pending:
+            raise NameError("Command %d not found" % cmdId)
+
+        await asyncio.sleep(1.5)
+
+        print("%s Set filter to %s" % (time.asctime(), self._pending[cmdId].filterName), file=sys.stderr)
+        sys.stderr.flush()
+        del self._pending[cmdId]
+
+        return Command.COMPLETE
+    
     def issueCommand_turnOnLaser(self, data):
         cmdId = self.__getCmdId(data.cmdName)
         self._pending[cmdId] = data
@@ -82,6 +94,18 @@ class SAL_camera():
             raise NameError("Command %d not found" % cmdId)
 
         time.sleep(2)
+        print("%s laser is warm" % (time.asctime()), file=sys.stderr)
+        sys.stderr.flush()
+        del self._pending[cmdId]
+
+        return Command.COMPLETE
+
+    async def awaitForCompletion_turnOnLaser(self, cmdId, timeout=0):
+        if not cmdId in self._pending:
+            raise NameError("Command %d not found" % cmdId)
+
+        await asyncio.sleep(2)
+        
         print("%s laser is warm" % (time.asctime()), file=sys.stderr)
         sys.stderr.flush()
         del self._pending[cmdId]
